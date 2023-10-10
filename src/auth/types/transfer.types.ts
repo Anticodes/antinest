@@ -6,11 +6,10 @@ export type CreateUser = {
 
 export type LoginUser = {
     email: string;
-    username: string;
     password: string;
 };
 
 export type Tokens = {
-    action_token: string;
+    access_token: string;
     refresh_token: string;
 };
