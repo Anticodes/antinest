@@ -1,0 +1,18 @@
+version: '3'
+services:
+  db:
+    image: postgres:16
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+      POSTGRES_DB: nest-test
+  test-db:
+    image: postgres:16
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+      POSTGRES_DB: nest-test
