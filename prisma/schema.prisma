@@ -16,6 +16,7 @@ model User {
   username    String
   password    String
   refreshHash String?
+  resetHash   String?
   products    Product[]
 }
 

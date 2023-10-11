@@ -1,38 +1,84 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    HttpCode,
+    HttpStatus,
+    Post,
+    UseGuards,
+} from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateUser, LoginUser } from "./types/transfer.types";
+import { CreateUser, LoginUser } from "./types/auth.types";
+import { RefreshGuard, ResetGuard } from "src/common/guards";
+import { GetUser } from "src/common/decorators/get-user.decorator";
+import { Public } from "src/common/decorators";
+import { ConfigService } from "@nestjs/config";
 
 @Controller("auth")
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(
+        private authService: AuthService,
+        private config: ConfigService,
+    ) {}
 
+    @Public()
     @Post("login")
+    @HttpCode(HttpStatus.OK)
     async login(@Body() user: LoginUser) {
         return this.authService.login(user);
     }
 
+    @Public()
     @Post("register")
+    @HttpCode(HttpStatus.CREATED)
     async register(@Body() user: CreateUser) {
         return this.authService.register(user);
     }
 
+    @Public()
+    @UseGuards(RefreshGuard)
     @Post("refresh")
-    refresh(@Body("token") refreshToken: string) {
-        return this.authService.refresh(refreshToken);
+    @HttpCode(HttpStatus.OK)
+    refresh(
+        @GetUser("id") userId: number,
+        @GetUser("refreshToken") refreshToken: string,
+    ) {
+        return this.authService.refresh(userId, refreshToken);
     }
 
     @Post("logout")
-    logout() {
-        return this.authService.logout();
+    @HttpCode(HttpStatus.OK)
+    logout(@GetUser("id") userId: number) {
+        return this.authService.logout(userId);
     }
 
+    @Public()
     @Post("forgot")
-    forgot(@Body("email") email: string) {
-        return this.authService.forgot(email);
+    @HttpCode(HttpStatus.OK)
+    async forgotPassword(@Body("email") email: string) {
+        const resetToken = await this.authService.forgotPassword(email);
+
+        //Send email to the user if token exists
+        if (resetToken) {
+            const link = `${this.config.get<string>(
+                "APP_URL",
+            )}/reset-password?t=${resetToken}`;
+
+            //TODO: implement email service then use it here
+            console.log(link);
+        }
+
+        return true;
     }
 
+    @Public()
+    @UseGuards(ResetGuard)
     @Post("reset")
-    reset() {
-        return this.authService.reset();
+    @HttpCode(HttpStatus.OK)
+    resetPassword(
+        @GetUser("id") userId: number,
+        @GetUser("resetToken") resetToken: string,
+        @Body("password") password: string,
+    ) {
+        return this.authService.resetPassword(userId, resetToken, password);
     }
 }
