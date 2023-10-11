@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException } from "@nestjs/common";
+import {
+    Injectable,
+    ForbiddenException,
+    UnprocessableEntityException,
+} from "@nestjs/common";
 import { CreateUser, LoginUser } from "./types/transfer.types";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as bcrypt from "bcrypt";
@@ -24,8 +28,7 @@ export class AuthService {
             user.password,
             userData.password,
         );
-        if (!correctPassword)
-            throw new ForbiddenException("Access Denied " + userData.password);
+        if (!correctPassword) throw new ForbiddenException("Access Denied");
 
         const tokens = await this.getTokens(user.id, user.email);
         await this.updateRefreshHash(user.id, tokens.refresh_token);
@@ -36,9 +39,13 @@ export class AuthService {
     async register(user: CreateUser) {
         const hash = await this.hashData(user.password);
 
-        const newUser = await this.prismaService.user.create({
-            data: { ...user, password: hash },
-        });
+        const newUser = await this.prismaService.user
+            .create({
+                data: { ...user, password: hash },
+            })
+            .catch(() => {
+                throw new UnprocessableEntityException("Email already exists");
+            });
 
         const tokens = await this.getTokens(newUser.id, newUser.email);
 
