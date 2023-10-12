@@ -7,7 +7,12 @@ import {
     UseGuards,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateUser, LoginUser } from "./types/auth.types";
+import {
+    CreateUser,
+    ForgotPassword,
+    LoginUser,
+    ResetPassword,
+} from "./types/auth.types";
 import { RefreshGuard, ResetGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { Public } from "src/common/decorators";
@@ -54,7 +59,7 @@ export class AuthController {
     @Public()
     @Post("forgot")
     @HttpCode(HttpStatus.OK)
-    async forgotPassword(@Body("email") email: string) {
+    async forgotPassword(@Body("email") { email }: ForgotPassword) {
         const resetToken = await this.authService.forgotPassword(email);
 
         //Send email to the user if token exists
@@ -77,7 +82,7 @@ export class AuthController {
     resetPassword(
         @GetUser("id") userId: number,
         @GetUser("resetToken") resetToken: string,
-        @Body("password") password: string,
+        @Body() { password }: ResetPassword,
     ) {
         return this.authService.resetPassword(userId, resetToken, password);
     }

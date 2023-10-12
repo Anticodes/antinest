@@ -24,6 +24,12 @@ export class LoginUser {
     password: string;
 }
 
+export class ForgotPassword {
+    @IsNotEmpty()
+    @IsEmail()
+    email: string;
+}
+
 export class ResetPassword {
     @IsNotEmpty()
     @IsString()
