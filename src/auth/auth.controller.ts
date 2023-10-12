@@ -17,11 +17,13 @@ import { RefreshGuard, ResetGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { Public } from "src/common/decorators";
 import { ConfigService } from "@nestjs/config";
+import { EmailService } from "src/notification/email.service";
 
 @Controller("auth")
 export class AuthController {
     constructor(
         private authService: AuthService,
+        private emailService: EmailService,
         private config: ConfigService,
     ) {}
 
@@ -59,7 +61,7 @@ export class AuthController {
     @Public()
     @Post("forgot")
     @HttpCode(HttpStatus.OK)
-    async forgotPassword(@Body("email") { email }: ForgotPassword) {
+    async forgotPassword(@Body() { email }: ForgotPassword) {
         const resetToken = await this.authService.forgotPassword(email);
 
         //Send email to the user if token exists
@@ -69,7 +71,11 @@ export class AuthController {
             )}/reset-password?t=${resetToken}`;
 
             //TODO: implement email service then use it here
-            console.log(link);
+            this.emailService.sendEmail(
+                "Forgot Password",
+                `<h1>Dear User</h1>Did you forgot your password?<br/><br/>Here is the <a style="text-decoration: none;" href="${link}">link</a>`,
+                email,
+            );
         }
 
         return true;
